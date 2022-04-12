@@ -104,83 +104,67 @@ class ImageIO:
         cv2.imshow("image", img)
 
 
-class DrawingPoint:
-    def __init__(self, dim=10, color=(155, 155, 155)):
-        self.dim = dim
-        self.color = color
-
-
-class Drawing:
+class Board:
     def __init__(self):
-        self.drawing_points = []
-        self.last_affected_points = {}
-        self.current_operation = "add"
+        self.canvas = None
+        self.mode = "drow"
 
-    def add_affected_points(self, pos_x, pos_y, dp):
-        self.last_affected_points[(pos_x, pos_y)] = dp
+        self.x1, self.y1 = 0, 0
+        self.x2, self.y2 = 0, 0
 
-    def confirm_drawing_operation(self):
-        if self.current_operation == "add" :
-            self.add_new_points()
-        else:
-            self.delete_points()
+    def init_board(self, image):
+        if self.canvas is None:
+            self.canvas = np.zeros_like(img)
 
-    def add_new_points(self):
-        self.drawing_points.append(self.last_affected_points)
+    def finger_on_board(self, pos_x, pos_y):
+        if self.canvas is None:
+            return False
 
-    def delete_points(self, pos_x, pos_y):
-        for line in self.drawing_points:
-            del line[(pos_x, pos_y)]
+        self.x2 = pos_x
+        self.y2 = pos_y
+
+        if self.x1 == 0 and self.y1 == 0:
+            self.x1, self.y1 = self.x2, self.y2
+            return True
+
+        self.canvas = cv2.line(self.canvas, (self.x1, self.y1), (self.x2, self.y2), (255, 0, 0), 10)
+        self.x1, self.y1 = self.x2, self.y2
+        return True
+
+    def finger_off_board(self):
+        self.x1, self.y1 = 0, 0
 
 
+
+
+
+
+import numpy as np
 
 io = ImageIO()
 d = HandDetect()
-drow = Drawing()
-pollp = None
+
+bb = Board()
+img = io.captureImage()
+bb.init_board(img)
 
 while True:
     img = io.captureImage()
     d.detect_hands(img)
 
-    '''p = d.get_point_position(0, 0)
-
-    if p:
-        cv2.circle(img, (p[0], p[1]), 15, (255, 255, 255), cv2.FILLED)
-
-        p = d.get_point_position(0, 1)
-        cv2.circle(img, (p[0], p[1]), 15, (255, 255, 255), cv2.FILLED)
-
-        p = d.get_point_position(0, 2)
-        cv2.circle(img, (p[0], p[1]), 15, (255, 255, 255), cv2.FILLED)
-
-        p = d.get_point_position(0, 5)
-        cv2.circle(img, (p[0], p[1]), 15, (255, 255, 255), cv2.FILLED)
-
-        p = d.get_point_position(0, 9)
-        cv2.circle(img, (p[0], p[1]), 15, (255, 255, 255), cv2.FILLED)
-
-        p = d.get_point_position(0, 13)
-        cv2.circle(img, (p[0], p[1]), 15, (255, 255, 255), cv2.FILLED)
-
-        p = d.get_point_position(0, 17)
-        cv2.circle(img, (p[0], p[1]), 15, (255, 255, 255), cv2.FILLED)'''
-
-    for line in drow.drawing_points:
-        for pino in line:
-            cv2.circle(img, (pino[0], pino[1]), 15, (0, 255, 0), cv2.FILLED)
-
-
     if d.is_finger_active(HandDetect.INDEX):
         p = d.get_point_position(0, HandDetect.INDEX)
-        cv2.circle(img, (p[0], p[1]), 15, (0, 255, 0), cv2.FILLED)
 
-        palla = DrawingPoint()
-        drow.add_affected_points(p[0], p[1], palla)
+        bb.finger_on_board(p[0], p[1])
+
+        cv2.circle(img, (p[0], p[1]), 15, (0, 255, 0), cv2.FILLED)
     else:
-        drow.add_new_points()
+        bb.finger_off_board()
+
+    #cv2.circle(canvas, (x2, y2), 20, (0, 0, 0), -1)
 
     # img = d.draw_tracked_hand(img)
+    img = cv2.add(bb.canvas, img)
     io.showFlippedImage(img)
 
     cv2.waitKey(1)
