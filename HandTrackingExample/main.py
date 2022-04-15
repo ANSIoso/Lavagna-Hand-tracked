@@ -11,6 +11,8 @@ class HandDetect:
     RING = 16
     PINKY = 20
 
+    NEAR_TOLLERANCE = 40
+
     def __init__(self):
         self.result = None
         self.w_img = None
@@ -68,6 +70,25 @@ class HandDetect:
 
         return not polygon.contains(p)
 
+    def finger_near(self, hand, finger_one, finger_two):
+        position_f1 = self.get_point_position(hand, finger_one)
+        position_f2 = self.get_point_position(hand, finger_two)
+
+        if not(position_f1 and position_f2):
+            return False
+
+        if position_f2[0] >= position_f1[0] + self.NEAR_TOLLERANCE or position_f2[0] <= position_f1[0] - self.NEAR_TOLLERANCE:
+            return False
+
+        if position_f2[1] >= position_f1[1] + self.NEAR_TOLLERANCE or position_f2[1] <= position_f1[1] - self.NEAR_TOLLERANCE:
+            return False
+
+        return True
+
+    def draw_finger_area(self, img, hand, finger):
+        position_f1 = self.get_point_position(hand, finger);
+
+        cv2.rectangle(img, (position_f1[0] - self.NEAR_TOLLERANCE, position_f1[1] - self.NEAR_TOLLERANCE), (position_f1[0] + self.NEAR_TOLLERANCE, position_f1[1] + self.NEAR_TOLLERANCE), (255,111,111), cv2.FILLED)
 
 import time
 
@@ -104,11 +125,14 @@ class ImageIO:
         cv2.imshow("image", img)
 
 
+import copy
 class Board:
     def __init__(self):
         self.canvas = None
+        self.history = []
         self.mode = "drow"
 
+        self.old_tings = True
         self.x1, self.y1 = 0, 0
         self.x2, self.y2 = 0, 0
 
@@ -120,6 +144,10 @@ class Board:
         if self.canvas is None:
             return False
 
+        if self.old_tings:
+            self.history.append(copy.deepcopy(self.canvas))
+            self.old_tings = False
+
         self.x2 = pos_x
         self.y2 = pos_y
 
@@ -127,12 +155,27 @@ class Board:
             self.x1, self.y1 = self.x2, self.y2
             return True
 
-        self.canvas = cv2.line(self.canvas, (self.x1, self.y1), (self.x2, self.y2), (255, 0, 0), 10)
+        cv2.line(self.canvas, (self.x1, self.y1), (self.x2, self.y2), (255, 255, 0), 5)
         self.x1, self.y1 = self.x2, self.y2
         return True
 
     def finger_off_board(self):
+        print(len(self.history))
+
         self.x1, self.y1 = 0, 0
+        self.old_tings = True
+
+
+
+    def undo(self):
+        print(len(self.history))
+
+        if len(self.history) <= 1:
+            return
+
+        self.history.pop()
+        print(len(self.history))
+        self.canvas = self.history[-1]
 
 
 
@@ -152,19 +195,25 @@ while True:
     img = io.captureImage()
     d.detect_hands(img)
 
-    if d.is_finger_active(HandDetect.INDEX):
+    if d.is_finger_active(HandDetect.INDEX) and not d.finger_near(0, d.INDEX, d.MIDDLE):
         p = d.get_point_position(0, HandDetect.INDEX)
 
         bb.finger_on_board(p[0], p[1])
 
         cv2.circle(img, (p[0], p[1]), 15, (0, 255, 0), cv2.FILLED)
     else:
+        print("pico")
         bb.finger_off_board()
 
-    #cv2.circle(canvas, (x2, y2), 20, (0, 0, 0), -1)
+    d.draw_finger_area(img, 0, d.MIDDLE)
+
+    if d.finger_near(0, d.MIDDLE, d.THUMB):
+        bb.undo()
 
     # img = d.draw_tracked_hand(img)
     img = cv2.add(bb.canvas, img)
+
+    d.draw_tracked_hand(img)
     io.showFlippedImage(img)
 
     cv2.waitKey(1)
