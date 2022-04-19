@@ -19,6 +19,7 @@ class HandDetect:
         self.h_img = None
 
         self.hand_inactivity_zone = [0, 1, 2, 3, 6, 10, 14, 18]
+        self.fingers = [self.THUMB, self.INDEX, self.MIDDLE, self.RING, self.PINKY]
 
         self.mpHands = mp.solutions.hands
         self.hands = self.mpHands.Hands()
@@ -56,8 +57,8 @@ class HandDetect:
 
         return int(point.x * self.w_img), int(point.y * self.h_img)
 
-    def is_finger_active(self, finger):
-        finger_position = self.get_point_position(0, finger)
+    def is_finger_active(self, hand, finger):
+        finger_position = self.get_point_position(hand, finger)
         if not finger_position:
             return False
 
@@ -77,7 +78,7 @@ class HandDetect:
         if not(position_f1 and position_f2):
             return False
 
-        if position_f2[0] >= position_f1[0] + self.NEAR_TOLLERANCE or position_f2[0] <= position_f1[0] - self.NEAR_TOLLERANCE:
+        if position_f2[0] >= position_f1[0] + self.NEAR_TOLLERANCE*2 or position_f2[0] <= position_f1[0] - self.NEAR_TOLLERANCE*2:
             return False
 
         if position_f2[1] >= position_f1[1] + self.NEAR_TOLLERANCE or position_f2[1] <= position_f1[1] - self.NEAR_TOLLERANCE:
@@ -85,15 +86,30 @@ class HandDetect:
 
         return True
 
-    def draw_finger_area(self, img, hand, finger):
-        position_f1 = self.get_point_position(hand, finger);
+    def hand_close(self, hand):
+        for finger in self.fingers:
+            print(self.is_finger_active(hand, finger))
 
-        cv2.rectangle(img, (position_f1[0] - self.NEAR_TOLLERANCE, position_f1[1] - self.NEAR_TOLLERANCE), (position_f1[0] + self.NEAR_TOLLERANCE, position_f1[1] + self.NEAR_TOLLERANCE), (255,111,111), cv2.FILLED)
+            if self.is_finger_active(hand, finger):
+                return False
+
+
+        print("\n\n\n\n")
+
+        return True
+
+    def draw_finger_area(self, img, hand, finger):
+        position_f1 = self.get_point_position(hand, finger)
+
+        cv2.rectangle(img, (position_f1[0] - self.NEAR_TOLLERANCE*2, position_f1[1] - self.NEAR_TOLLERANCE), (position_f1[0] + self.NEAR_TOLLERANCE*2, position_f1[1] + self.NEAR_TOLLERANCE), (255,111,111), cv2.FILLED)
 
 import time
 
 
 # import cv2
+
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 
 
 class ImageIO:
@@ -124,29 +140,35 @@ class ImageIO:
         self.addProcessingInfo(img)
         cv2.imshow("image", img)
 
+    def showImage1(self, img):
+        imgplot = plt.imshow(img)
+        plt.show()
+
 
 import copy
 class Board:
     def __init__(self):
         self.canvas = None
-        self.history = []
-        self.mode = "drow"
+        self.mode = "draw"
 
-        self.old_tings = True
+        self.actual_me = None
+        self.old_me = None
+        self.new_thing = False
+
         self.x1, self.y1 = 0, 0
         self.x2, self.y2 = 0, 0
 
     def init_board(self, image):
         if self.canvas is None:
             self.canvas = np.zeros_like(img)
+            self.actual_me = copy.deepcopy(self.canvas)
+            self.old_me = copy.deepcopy(self.canvas)
 
     def finger_on_board(self, pos_x, pos_y):
         if self.canvas is None:
             return False
 
-        if self.old_tings:
-            self.history.append(copy.deepcopy(self.canvas))
-            self.old_tings = False
+        self.new_thing = True
 
         self.x2 = pos_x
         self.y2 = pos_y
@@ -155,32 +177,51 @@ class Board:
             self.x1, self.y1 = self.x2, self.y2
             return True
 
-        cv2.line(self.canvas, (self.x1, self.y1), (self.x2, self.y2), (255, 255, 0), 5)
+        if self.mode == "draw" :
+            cv2.line(self.canvas, (self.x1, self.y1), (self.x2, self.y2), (255, 255, 0), 5)
+        else:
+            cv2.circle(self.canvas, (self.x1, self.y1), 20, (0, 0, 0), -1)
+
         self.x1, self.y1 = self.x2, self.y2
         return True
 
     def finger_off_board(self):
-        print(len(self.history))
-
         self.x1, self.y1 = 0, 0
-        self.old_tings = True
 
-
-
-    def undo(self):
-        print(len(self.history))
-
-        if len(self.history) <= 1:
+        if self.canvas is None:
             return
 
-        self.history.pop()
-        print(len(self.history))
-        self.canvas = self.history[-1]
+        if self.new_thing:
+            self.old_me = copy.deepcopy(self.actual_me)
+            self.actual_me = copy.deepcopy(self.canvas)
+            io.showImage1(self.old_me)
+
+    def undo(self):
+        if not self.new_thing:
+            return
+
+        io.showImage1(self.old_me)
+        self.canvas = copy.copy(self.old_me)
+        self.new_thing = False
+        self.actual_me = copy.copy(self.canvas)
+        self.old_me = copy.copy(self.canvas)
+
+    def change_mode(self):
+        if(self.mode == "draw"):
+            self.mode = "delete"
+        else:
+            self.mode = "draw"
 
 
+# -----------------------------------------
 
+def try_set(a, b):
+    if a != b:
+        return b
 
+    return a
 
+# -----------------------------------------
 
 import numpy as np
 
@@ -191,29 +232,44 @@ bb = Board()
 img = io.captureImage()
 bb.init_board(img)
 
+operation_old = ""
+
 while True:
     img = io.captureImage()
     d.detect_hands(img)
 
-    if d.is_finger_active(HandDetect.INDEX) and not d.finger_near(0, d.INDEX, d.MIDDLE):
-        p = d.get_point_position(0, HandDetect.INDEX)
+    operation = ""
 
-        bb.finger_on_board(p[0], p[1])
+    if d.get_point(0, HandDetect.INDEX):
+        d.draw_finger_area(img, 0, d.MIDDLE)
 
-        cv2.circle(img, (p[0], p[1]), 15, (0, 255, 0), cv2.FILLED)
-    else:
-        print("pico")
-        bb.finger_off_board()
+        if not d.finger_near(0, d.INDEX, d.MIDDLE):
+            p = d.get_point_position(0, HandDetect.INDEX)
 
-    d.draw_finger_area(img, 0, d.MIDDLE)
+            bb.finger_on_board(p[0], p[1])
 
-    if d.finger_near(0, d.MIDDLE, d.THUMB):
-        bb.undo()
+            cv2.circle(img, (p[0], p[1]), 15, (0, 255, 0), cv2.FILLED)
+        else:
+            operation = try_set(operation_old, "off")
 
-    # img = d.draw_tracked_hand(img)
+        if d.finger_near(0, d.MIDDLE, d.THUMB):
+            operation = try_set(operation_old, "undo")
+
+        if operation != operation_old:
+            if operation == "off":
+                bb.finger_off_board()
+            elif operation == "undo":
+                bb.undo()
+
+        operation_old = operation
+
+
+        if d.hand_close(0):
+            bb.change_mode()
+
+    img = d.draw_tracked_hand(img)
     img = cv2.add(bb.canvas, img)
 
-    d.draw_tracked_hand(img)
     io.showFlippedImage(img)
 
     cv2.waitKey(1)
