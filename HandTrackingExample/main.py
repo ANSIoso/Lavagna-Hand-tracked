@@ -1,3 +1,5 @@
+from threading import Thread
+
 import mediapipe as mp
 import cv2
 from shapely.geometry import Point
@@ -27,6 +29,8 @@ class HandDetect:
 
         self.mpHands = mp.solutions.hands
         self.hands = self.mpHands.Hands()
+
+        self.handInclination = 0
 
         self.mpDraw = mp.solutions.drawing_utils
 
@@ -75,7 +79,7 @@ class HandDetect:
 
         return not polygon.contains(p)
 
-    def finger_near(self, hand, finger_one, finger_two, x_toll = 1, y_toll = 1):
+    def finger_near(self, hand, finger_one, finger_two, x_toll=1, y_toll=1):
         position_f1 = self.get_point_position(hand, finger_one)
         position_f2 = self.get_point_position(hand, finger_two)
 
@@ -94,12 +98,9 @@ class HandDetect:
 
     def hand_close(self, hand):
         for finger in self.fingers:
-            print(self.is_finger_active(hand, finger))
 
             if self.is_finger_active(hand, finger):
                 return False
-
-        print("\n\n\n\n")
 
         return True
 
@@ -109,6 +110,12 @@ class HandDetect:
         cv2.rectangle(img, (position_f1[0] - self.NEAR_TOLLERANCE * 2, position_f1[1] - self.NEAR_TOLLERANCE),
                       (position_f1[0] + self.NEAR_TOLLERANCE * 2, position_f1[1] + self.NEAR_TOLLERANCE),
                       (255, 111, 111), cv2.FILLED)
+
+    def detect_hand_inclination(self):
+        p1 = self.get_point_position(0, 3)
+        p2 = self.get_point_position(0, 17)
+
+        self.handInclination = p1[1] - p2[1]
 
 
 import time
@@ -153,6 +160,7 @@ class ImageIO:
 
 
 import copy
+
 
 # classe responsabile per il disegno vero e proprio
 class Board:
@@ -243,6 +251,68 @@ class Board:
             self.mode = "draw"
 
 
+# ------------ model ------------
+class Menu:
+    def __init__(self, choice_number):
+        self.actual_choice = 0
+        self.choice_number = choice_number
+
+    def next_choice(self):
+        if self.actual_choice >= self.choice_number:
+            return
+
+        self.actual_choice += 1
+
+    def previous_choice(self):
+        if self.actual_choice <= 0:
+            return
+
+        self.actual_choice -= 1
+
+# ------------ model ------------
+
+# ------------ controller ------------
+class MenuController(Thread):
+    def __init__(self, menu):
+        Thread.__init__(self)
+        self.menu = menu
+
+        self.wait = False
+
+        self.tollerance = 20
+
+    def run(self):
+        while True:
+            if self.wait == True:
+                time.sleep(1)
+                self.wait = False
+
+            time.sleep_ms(1)
+
+    def navigate_menu(self, val):
+        if self.wait:
+            return
+
+        if -self.tollerance < val and val < self.tollerance:
+            return
+
+        if val < -self.tollerance:
+            self.menu.previous_choice()
+
+        if val > self.tollerance:
+            self.menu.next_choice()
+
+        self.wait = True
+
+
+# ------------ controller ------------
+
+# ------------ view ------------
+
+
+# ------------ view ------------
+
+
 # -----------------------------------------
 
 def try_set(a, b):
@@ -263,6 +333,10 @@ bb = Board()
 img = io.captureImage()
 bb.init_board(img)
 
+menu1 = Menu(8);
+menuc = MenuController(menu1)
+menuc.start()
+
 operation_old = ""
 
 while True:
@@ -272,6 +346,12 @@ while True:
     operation = ""
 
     if d.get_point(0, HandDetect.INDEX):
+
+        menuc.navigate_menu(d.handInclination)
+
+        d.detect_hand_inclination()
+        print(d.handInclination)
+
         d.draw_finger_area(img, 0, d.MIDDLE)
 
         if not d.finger_near(0, d.INDEX, d.MIDDLE, 2):
