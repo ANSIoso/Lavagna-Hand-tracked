@@ -18,6 +18,9 @@ class Board:
         self.x1, self.y1 = 0, 0
         self.x2, self.y2 = 0, 0
 
+        self.color = (255, 255, 255)
+        self.dimension = 20
+
     def init_board(self, img):
         # il canvas sarà inizializzato con le dimensioni dell'immagine sulla quale si vuole disegnare
         if self.canvas is not None:
@@ -48,9 +51,9 @@ class Board:
         # a seconda della modalità che è attualmente impostata si disegnerà una linea dallo "scorso punto" all'attuale
         # oppure si andra a cancellare quello che era precedentemente contenuto in quella posizione del canvas
         if self.mode == "draw":
-            cv2.line(self.canvas, (self.x1, self.y1), (self.x2, self.y2), (255, 255, 255), 5)
+            cv2.line(self.canvas, (self.x1, self.y1), (self.x2, self.y2), self.color, self.dimension)
         else:
-            cv2.circle(self.canvas, (self.x1, self.y1), 20, (0, 0, 0), -1)
+            cv2.circle(self.canvas, (self.x1, self.y1), self.dimension, (0, 0, 0), -1)
 
         # il punto attuale viene registrato come prossimo punto d'inizio
         self.x1, self.y1 = self.x2, self.y2
@@ -89,3 +92,4 @@ class Board:
             self.mode = "delete"
         else:
             self.mode = "draw"
+

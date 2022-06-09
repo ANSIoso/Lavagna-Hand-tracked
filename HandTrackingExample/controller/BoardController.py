@@ -1,19 +1,20 @@
 import time
 from threading import Thread
 
+from controller.Menu_C import MenuController
 from model.Board_m import Board
-from model.HandDataCalculator import HandDetect
-from model.ImageIO import ImageIO
+from model.HandDetector_m import HandDetect
+from model.Menu_m import MenuM
 from view.boardWindow import Ui_Board
+from view.menu1 import MenuUi
 
 
 class BoardController(Thread):
 
-    def __init__(self, boardW: Ui_Board, image_io: ImageIO, handDetector: HandDetect, boardM: Board):
+    def __init__(self, boardW: Ui_Board, handDetector: HandDetect, boardM: Board):
         super().__init__()
 
         self.boardW = boardW
-        self.image_io = image_io
         self.handDetector = handDetector
         self.boardM = boardM
 
@@ -23,6 +24,7 @@ class BoardController(Thread):
         '''______________'''
 
     def run(self):
+        self.open_menu()
         while True:
             self.boardW.update_board()
 
@@ -30,9 +32,7 @@ class BoardController(Thread):
 
             self.operation_actual = ""
 
-            self.handDetector.detect_hands(self.image_io.lastImage)
-
-            if not self.handDetector.get_point(0, HandDetect.INDEX):
+            if not self.handDetector.exist_hand(1):
                 time.sleep(0.02)
                 continue
 
@@ -45,9 +45,6 @@ class BoardController(Thread):
 
             if self.handDetector.finger_near(0, self.handDetector.THUMB, self.handDetector.PINKY):
                 self.try_set("undo")
-
-            if self.handDetector.hand_close(0):
-                self.try_set("mode")
 
             self.applay_operation()
 
@@ -67,7 +64,15 @@ class BoardController(Thread):
                 self.boardM.finger_off_board()
             elif self.operation_actual == "undo":
                 self.boardM.undo()
-            elif self.operation_actual == "mode":
-                self.boardM.change_mode()
 
         self.operation_old = self.operation_actual
+
+    def open_menu(self):
+        m = MenuM()
+        menu_ui = MenuUi(self.boardW.bo, m)
+
+        menuC = MenuController(m, menu_ui, self.boardM, self.handDetector)
+        menuC.daemon = True
+        menuC.start()
+
+        self.boardW.show_menu(menu_ui)

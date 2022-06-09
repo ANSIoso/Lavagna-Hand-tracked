@@ -3,6 +3,8 @@ import mediapipe as mp
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 
+from model.ImageIO import ImageIO
+
 
 class HandDetect:
     # classe utilizzata per avere informazioni sulle "mani" attualmente inquadrate dalla telecamera
@@ -17,7 +19,9 @@ class HandDetect:
     # area di tolleranza utilizzata per capire se un dito è vicino ad un'altro
     NEAR_TOLLERANCE = 30
 
-    def __init__(self):
+    def __init__(self, image_io: ImageIO):
+        self.image_io = image_io
+
         self.result = None
         self.w_img = None
         self.h_img = None
@@ -28,15 +32,20 @@ class HandDetect:
         self.mpHands = mp.solutions.hands
         self.hands = self.mpHands.Hands()
 
+        self.n_hands = 0
         self.handInclination = 0
 
         self.mpDraw = mp.solutions.drawing_utils
 
-    def detect_hands(self, img):
+    def detect_hands(self):
+        img = self.image_io.lastImage
         self.h_img, self.w_img, c = img.shape
 
         imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         self.result = self.hands.process(imgRGB)
+
+        if self.result.multi_hand_landmarks:
+            self.n_hands = len(self.result.multi_hand_landmarks)
 
     def draw_tracked_hand(self, img):
         if self.result.multi_hand_landmarks:
@@ -45,15 +54,23 @@ class HandDetect:
 
         return img
 
+    def exist_hand(self, hand):
+        if not self.result or not self.result.multi_hand_landmarks:
+            return False
+
+        if self.n_hands < hand:
+            return False
+
+        return True
+
     def get_point(self, hand, point):
         if not self.result.multi_hand_landmarks:
             return False
 
-        n_hands = len(self.result.multi_hand_landmarks)
-        if n_hands <= hand:
+        if not self.exist_hand(hand):
             return False
 
-        return self.result.multi_hand_landmarks[n_hands - hand - 1].landmark[point]
+        return self.result.multi_hand_landmarks[self.n_hands - hand - 2].landmark[point]
 
     def get_point_position(self, hand, point):
         point = self.get_point(hand, point)
@@ -95,6 +112,9 @@ class HandDetect:
         return True
 
     def hand_close(self, hand):
+        if not self.exist_hand(hand):
+            return False
+
         for finger in self.fingers:
 
             if self.is_finger_active(hand, finger):
@@ -110,6 +130,9 @@ class HandDetect:
                       (255, 111, 111), cv2.FILLED)
 
     def detect_hand_inclination(self):
+        if not self.exist_hand(0):
+            return
+
         p1 = self.get_point_position(0, 3)
         p2 = self.get_point_position(0, 17)
 

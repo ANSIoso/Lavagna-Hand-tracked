@@ -10,10 +10,12 @@ import cv2
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QAction
 
 from model.Board_m import Board
 from model.ImageIO import ImageIO
+from model.Menu_m import MenuM
+from view.menu1 import MenuUi
+from view.menu_option1 import MenuOption
 
 
 class Ui_Board(object):
@@ -25,7 +27,12 @@ class Ui_Board(object):
         self.image_io = image_io
         self.board_data = board_data
 
+        self.bo = None
+        self.menu = None
+
     def setupUi(self, Board):
+        self.bo = Board
+
         Board.setObjectName("Board")
         Board.resize(838, 619)
         self.centralwidget = QtWidgets.QWidget(Board)
@@ -55,14 +62,9 @@ class Ui_Board(object):
         self.statusbar.setObjectName("statusbar")
         Board.setStatusBar(self.statusbar)
 
+
         self.retranslateUi(Board)
         QtCore.QMetaObject.connectSlotsByName(Board)
-
-        '''______________'''
-
-        #self.menu =
-
-        '''______________'''
 
     def retranslateUi(self, Board):
         _translate = QtCore.QCoreApplication.translate
@@ -93,3 +95,9 @@ class Ui_Board(object):
         p = convert_to_Qt_format.scaled(qt_img_w, qt_img_h, Qt.KeepAspectRatio)
 
         return QPixmap.fromImage(p)
+
+
+    def show_menu(self, menu):
+        print("menu\n")
+
+        self.gridLayout.addWidget(menu)

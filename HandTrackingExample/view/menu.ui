@@ -1,21 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Form</class>
- <widget class="QWidget" name="Form">
+ <class>menu</class>
+ <widget class="QWidget" name="menu">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>346</width>
+    <height>186</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>menu</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="topMargin">
+    <number>11</number>
+   </property>
    <item>
-    <widget class="QLabel" name="label">
+    <widget class="QLabel" name="title">
      <property name="layoutDirection">
       <enum>Qt::LeftToRight</enum>
      </property>
