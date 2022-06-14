@@ -9,6 +9,7 @@ class MenuUi(QWidget):
     def __init__(self, parent = None, menu: Menu_m = None):
         QWidget.__init__(self, parent=parent)
 
+        self.last_menu_section = None
         self.menu_m = menu
 
         self.lay = QVBoxLayout(self)
@@ -61,6 +62,8 @@ class MenuUi(QWidget):
         self.lay.addWidget(self.option_list)
 
     def update(self):
+        # at each update of the interface:
+
         self.should_visualize_menu()
 
         self.clear_all_options()
@@ -72,27 +75,29 @@ class MenuUi(QWidget):
     def load_options(self):
         option_count = 0
 
+        # for each option that exist in the actual menu option section
         for option in self.menu_m.actual_menu_option:
+            # add an option to the menu
             self.add_option(option[0], option_count)
             option_count += 1
 
     def add_option(self, content, option_number):
+        # create a menu option
         m_option = MenuOption(self.option_list, content)
 
+        # if it is the one that is the selected at that moment it should be named differently
+        # so a different stylesheet is applied to it
         if option_number == self.menu_m.actual_choice:
             m_option.setObjectName("chosen_option" + str(self.menu_m.selection_time))
 
+        # add that new option to the option list in the gui
         self.option_list_lay.addWidget(m_option)
 
     def should_visualize_menu(self):
         self.setVisible(self.menu_m.open)
 
-        #if not self.menu_m.open:
-        #    return
-
-        #self.move(self.menu_m.menu_pos_x, self.menu_m.menu_pos_y)
-
     def clear_all_options(self):
+        # delete all the option that are present in the menu
         for i in reversed(range(self.option_list_lay.count())):
             self.option_list_lay.itemAt(i).widget().deleteLater()
 

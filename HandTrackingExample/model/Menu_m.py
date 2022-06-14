@@ -70,12 +70,12 @@ class MenuM:
 
         self.actual_choice = new_choice
 
-    def get_choice(self):
-        return self.actual_menu_option[self.actual_choice]
-
     def open_menu(self):
         self.open = True
         self.load_option(self.INITIAL)
 
     def close_menu(self):
         self.open = False
+
+    def get_choice(self):
+        return self.actual_menu_option[self.actual_choice]

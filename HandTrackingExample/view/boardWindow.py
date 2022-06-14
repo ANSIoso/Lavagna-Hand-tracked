@@ -66,6 +66,12 @@ class Ui_Board(object):
         Board.setWindowTitle(_translate("Board", "MainWindow"))
 
     def update_board(self):
+        # at each time step:
+        # - take image from the picture capture class
+        # - take the canvas
+        # - combine it
+        # - show it in the canvas
+
         cv_img = self.image_io.lastImage
         board_lines = self.board_data.canvas
         cv_img = cv2.add(board_lines, cv_img)
@@ -78,6 +84,9 @@ class Ui_Board(object):
         self.boardCanvas.setPixmap(qt_img)
 
     def convert_cv_qt(self, cv_img, area_w, area_h):
+        # method used to convert an image taken from open cv to a
+        # format that can be shown in a qtcanvas
+
         rgb_image = cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB)
         h, w, ch = rgb_image.shape
         bytes_per_line = ch * w
@@ -94,9 +103,15 @@ class Ui_Board(object):
         timer.update_signal.connect(self.update_board)
 
     def add_menu(self, menu_c: MenuController):
+        # method used to add the menu gui to the window
+
         self.menu_ui = MenuUi(self.central_widget, menu_c.menu_m)
+        # the gui should be also connected to the controller to interact with it
+        # and also to update it
         self.menu_ui.connect_timer(menu_c)
 
         self.menu_ui.setGeometry(100, 100, 200, 300)
+
+        # at the beginning the menu is not visible it is shown only if requested by hand sign
         self.menu_ui.setVisible(False)
 

@@ -46,6 +46,7 @@ class ImageIO(Thread):
             cv2.waitKey(0)
 
     def add_ProcessingInfo(self, img):
+        # this method adds the information about average fps of the picture capturing
         self.cTime = time.time()
         fps = 1 / (self.cTime - self.pTime)
         self.pTime = self.cTime
