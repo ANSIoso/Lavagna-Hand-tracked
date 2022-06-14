@@ -6,9 +6,10 @@ class MenuOptions:
     exit = 'exit', False
 
     # colors
-    red = 'red', (0, 255, 0)
-    yellow = 'yellow', (255, 0, 0)
-    blue = 'blue', (0, 0, 255)
+    white = 'white', (255, 255, 255)
+    red = 'red', (0, 0, 255)
+    yellow = 'yellow', (0, 255, 0)
+    blue = 'blue', (255, 0, 0)
 
     # thicknesses
     thin = 'thin', 5

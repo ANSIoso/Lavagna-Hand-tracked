@@ -1,5 +1,6 @@
 import sys
 
+from PyQt5.QtWidgets import QApplication
 from pyqt5_plugins.examplebutton import QtWidgets
 
 from controller.BoardController import BoardController
@@ -11,32 +12,35 @@ from model.ImageIO import ImageIO
 from model.Menu_m import MenuM
 from view.boardWindow import Ui_Board
 
+
 app = QtWidgets.QApplication(sys.argv)
 BoardW = QtWidgets.QMainWindow()
 
 imgio = ImageIO()
 imgio.daemon = True
 imgio.want_flipped(True)
-imgio.want_processing_info(True)
 imgio.start()
-
-board = Board()
 
 while imgio.lastImage is None:
     print("ciao")
-board.init_board(imgio.lastImage)
 
-detector = HandDetect(imgio)
-det_c = HandDetector_c(detector)
+hand_detector = HandDetect(imgio)
+det_c = HandDetector_c(hand_detector)
 det_c.daemon = True
 det_c.start()
 
-ui = Ui_Board(imgio, board)
-bc = BoardController(ui, detector, board)
-bc.daemon = True
-bc.start()
+board_m = Board()
 
-ui.setupUi(BoardW)
+menu_m = MenuM()
+menu_c = MenuController(menu_m, board_m, hand_detector)
 
+board_m.init_board(imgio.lastImage)
+board_c = BoardController(hand_detector, board_m, menu_c)
+board_c.daemon = True
+ui = Ui_Board(imgio, board_m)
+ui.connect_timer(board_c)
+
+ui.setupUi(BoardW, menu_c)
 BoardW.show()
+
 sys.exit(app.exec_())

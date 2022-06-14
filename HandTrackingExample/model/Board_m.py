@@ -3,6 +3,9 @@ import copy
 import numpy as np
 
 # classe responsabile per il disegno vero e proprio
+from model.MenuOptions import MenuOptions
+
+
 class Board:
     def __init__(self):
         # il disegno sarà contenuto sotto forma di canvas
@@ -18,7 +21,7 @@ class Board:
         self.x1, self.y1 = 0, 0
         self.x2, self.y2 = 0, 0
 
-        self.color = (255, 255, 255)
+        self.color = MenuOptions.white[1]
         self.dimension = 20
 
     def init_board(self, img):

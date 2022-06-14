@@ -10,7 +10,7 @@ class MenuOption(QWidget):
 
         self.name = self.add_option_name(option_name)
         # codice da cambiare provvisorio per immagine
-        self.name = self.add_option_name("ooo")
+        #self.name = self.add_option_name("ooo")
 
     def add_option_name(self, content):
         label = QLabel(content, self)

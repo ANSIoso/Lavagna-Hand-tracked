@@ -1,20 +1,19 @@
 import time
-from threading import Thread
+
+from PyQt5 import QtCore
 
 from controller.Menu_C import MenuController
 from model.Board_m import Board
 from model.HandDetector_m import HandDetect
-from model.Menu_m import MenuM
-from view.boardWindow import Ui_Board
-from view.menu1 import MenuUi
 
 
-class BoardController(Thread):
+class BoardController(QtCore.QThread):
+    update_signal = QtCore.pyqtSignal()
 
-    def __init__(self, boardW: Ui_Board, handDetector: HandDetect, boardM: Board):
-        super().__init__()
+    def __init__(self, handDetector: HandDetect, boardM: Board, menu_c: MenuController, parent=None):
+        super(BoardController, self).__init__(parent)
 
-        self.boardW = boardW
+        self.board_ui = None
         self.handDetector = handDetector
         self.boardM = boardM
 
@@ -23,33 +22,39 @@ class BoardController(Thread):
         self.operation_old = ""
         '''______________'''
 
-    def run(self):
-        self.open_menu()
-        while True:
-            self.boardW.update_board()
+        self.is_running = False
+        self.menu_c = menu_c
 
+    def run(self):
+        self.is_running = True
+
+        while True:
             '''_______________________'''
 
             self.operation_actual = ""
 
-            if not self.handDetector.exist_hand(1):
-                time.sleep(0.02)
-                continue
+            if self.handDetector.exist_hand(0):
+                if not self.handDetector.finger_near(0, self.handDetector.INDEX, self.handDetector.MIDDLE, 2):
+                    p = self.handDetector.get_point_position(0, HandDetect.INDEX)
 
-            if not self.handDetector.finger_near(0, self.handDetector.INDEX, self.handDetector.MIDDLE, 2):
-                p = self.handDetector.get_point_position(0, HandDetect.INDEX)
+                    self.boardM.finger_on_board(p[0], p[1])
+                else:
+                    self.try_set("off")
 
-                self.boardM.finger_on_board(p[0], p[1])
-            else:
-                self.try_set("off")
+            if self.handDetector.exist_hand(1):
 
-            if self.handDetector.finger_near(0, self.handDetector.THUMB, self.handDetector.PINKY):
-                self.try_set("undo")
+                if self.handDetector.is_finger_active(1, self.handDetector.THUMB) and self.handDetector.finger_near(1, self.handDetector.THUMB, self.handDetector.MIDDLE):
+                    self.open_menu()
+
+                if self.handDetector.finger_near(1, self.handDetector.THUMB, self.handDetector.PINKY):
+                    self.try_set("undo")
+
+            # encode hand out of screen closes menu
 
             self.applay_operation()
-
             '''_______________________'''
 
+            self.update_signal.emit()
             time.sleep(0.02)
 
     def try_set(self, new_operation):
@@ -68,11 +73,8 @@ class BoardController(Thread):
         self.operation_old = self.operation_actual
 
     def open_menu(self):
-        m = MenuM()
-        menu_ui = MenuUi(self.boardW.bo, m)
+        if self.menu_c.is_running:
+            return
 
-        menuC = MenuController(m, menu_ui, self.boardM, self.handDetector)
-        menuC.daemon = True
-        menuC.start()
-
-        self.boardW.show_menu(menu_ui)
+        self.menu_c.menu_m.open_menu()
+        self.menu_c.start()

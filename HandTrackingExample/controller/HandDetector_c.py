@@ -5,6 +5,8 @@ from model.HandDetector_m import HandDetect
 
 
 class HandDetector_c(Thread):
+    # class that make run the hand detector
+
     def __init__(self, hand_detector: HandDetect):
         super().__init__()
 

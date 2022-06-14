@@ -4,24 +4,35 @@ from threading import Thread
 import cv2
 
 class ImageIO(Thread):
+    # class used to have a video stream from the cam, it takes a picture at each instance of time
+    # and keeps it so other class can use it
+
     def __init__(self):
         super().__init__()
 
+        # fields used to calculate the fps of the stream
         self.cTime = time.time();
         self.pTime = time.time();
+        # open a channel with the cam for take the pictures
         self.cap = cv2.VideoCapture(0)
 
+        # field to keep the last image
         self.lastImage = None
+        # field to chose if add information to the picture
         self.processingInfo = False
         self.flipped = False
 
     def run(self):
+        # at each instance of time:
+        #   - take a new picture
+        #   - if it not succede close the method
+        #   - if is required add other information
 
         while True:
             succes, img = self.cap.read()
 
             if not succes:
-                return
+                continue
 
             if self.flipped:
                 img = self.flip_image(img)
