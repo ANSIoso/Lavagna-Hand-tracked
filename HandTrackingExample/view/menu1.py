@@ -1,5 +1,4 @@
 from PyQt5.QtWidgets import QWidget, QLabel, QVBoxLayout
-from PyQt5.uic.properties import QtCore
 
 from model import Menu_m
 from view.menu_option1 import MenuOption

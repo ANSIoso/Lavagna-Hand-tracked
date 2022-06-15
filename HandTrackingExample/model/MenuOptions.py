@@ -1,9 +1,10 @@
 
 class MenuOptions:
-    switch_mode = 'eraser/pencil', False
-    change_colors = 'colors', False
-    pencil_thickness ='thickness', False
-    exit = 'exit', False
+    switch_mode = 'Eraser/pencil', False
+    delete_all = 'Delete all', False
+    change_colors = 'Colors', False
+    pencil_thickness = 'Thickness', False
+    exit = 'Exit', False
 
     # colors
     white = 'white', (255, 255, 255)

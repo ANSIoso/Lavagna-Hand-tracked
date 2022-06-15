@@ -19,7 +19,6 @@ class BoardController(QtCore.QThread):
     def __init__(self, handDetector: HandDetect, boardM: Board, menu_c: MenuController, parent=None):
         super(BoardController, self).__init__(parent)
 
-        self.board_ui = None
         self.handDetector = handDetector
         self.boardM = boardM
 
@@ -44,6 +43,8 @@ class BoardController(QtCore.QThread):
             self.operation_actual = ""
 
             if self.handDetector.exist_hand(0):
+                self.boardM.pointer_position = self.handDetector.get_point_position(0, self.handDetector.INDEX)
+
                 # (checked that there is the first hand on the screen):
                 # - if the INDEX and the MIDDLE ^0 aren't near, record the position of the INDEX
                 #   as a point in the actual line
@@ -53,6 +54,8 @@ class BoardController(QtCore.QThread):
                 else:
                     p = self.handDetector.get_point_position(0, HandDetect.INDEX)
                     self.boardM.finger_on_board(p[0], p[1])
+            else:
+                self.boardM.pointer_position = None
 
             if self.handDetector.exist_hand(1):
                 if self.handDetector.hand_open(1):

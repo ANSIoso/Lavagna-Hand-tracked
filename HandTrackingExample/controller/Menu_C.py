@@ -135,6 +135,11 @@ class MenuController(QtCore.QThread):
             self.board.change_mode()
             self.close_signal.emit()
 
+        # - delete all what there is in the canvas
+        if self.menu_m.get_choice() == MenuOptions.delete_all:
+            self.board.delete_all()
+            self.close_signal.emit()
+
     def apply_board_modification(self):
         # based on the menu choice and section you can
 

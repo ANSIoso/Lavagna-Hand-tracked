@@ -26,6 +26,8 @@ class Board:
         self.color = MenuOptions.white[1]
         self.dimension = 20
 
+        self.pointer_position = None
+
     def init_board(self, img):
         # the dimensions of the canvas will be set as the dimension of the image where draw on
         if self.canvas is not None:
@@ -93,6 +95,12 @@ class Board:
 
         # the old version of the drawing is loaded as actual
         self.canvas = copy.deepcopy(self.old_me[-1])
+
+    def delete_all(self):
+        # delete all the things now present on the canvas
+
+        self.old_me.append(copy.deepcopy(self.old_me[0]))
+        self.canvas = self.old_me[-1]
 
     def change_mode(self):
         # method used to switch from drawing to deleting in the canvas

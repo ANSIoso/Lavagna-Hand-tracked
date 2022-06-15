@@ -2,14 +2,16 @@ import cv2
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QLabel
 
-from controller import BoardController
 from controller.Menu_C import MenuController
 
 from model.Board_m import Board
 from model.ImageIO import ImageIO
 from view.menu1 import MenuUi
+from PIL import Image
 
+import numpy as np
 
 class Ui_Board(object):
     canvas_border = 30
@@ -21,6 +23,8 @@ class Ui_Board(object):
         self.board_data = board_data
 
         self.menu_ui = None
+
+        self.pointer_dimension = 16
 
     def setupUi(self, Board, menu_c: MenuController):
         Board.setObjectName("Board")
@@ -76,6 +80,8 @@ class Ui_Board(object):
         board_lines = self.board_data.canvas
         cv_img = cv2.add(board_lines, cv_img)
 
+        cv_img = self.show_pointer(cv_img)
+
         if cv_img is None:
             return
 
@@ -115,3 +121,26 @@ class Ui_Board(object):
         # at the beginning the menu is not visible it is shown only if requested by hand sign
         self.menu_ui.setVisible(False)
 
+    def add_pointer_in_screen(self, screen_img, x, y):
+        if self.board_data.mode == "draw":
+            overlay = Image.open("../HandTrackingExample/resurces/pencil-solid.png")
+        if self.board_data.mode == "delete":
+            overlay = Image.open("../HandTrackingExample/resurces/eraser-solid.png")
+
+
+        overlay = overlay.resize((self.pointer_dimension, self.pointer_dimension))
+        overlay = overlay.convert("RGBA")
+
+        background = Image.fromarray(screen_img)
+        background.paste(overlay, (x, y-10), overlay)
+
+        return np.asarray(background)
+
+    def show_pointer(self, screen_canvas):
+        if self.board_data.pointer_position is None:
+            return screen_canvas
+
+        x = self.board_data.pointer_position[0]
+        y = self.board_data.pointer_position[1]
+
+        return self.add_pointer_in_screen(screen_canvas, x, y)

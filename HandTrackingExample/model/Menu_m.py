@@ -10,7 +10,7 @@ class MenuM:
     THICKNESS = 2
 
     # section menu items
-    option_initial = [MenuOptions.switch_mode, MenuOptions.change_colors, MenuOptions.pencil_thickness]
+    option_initial = [MenuOptions.switch_mode, MenuOptions.delete_all, MenuOptions.change_colors, MenuOptions.pencil_thickness]
     option_colors = [MenuOptions.white, MenuOptions.red, MenuOptions.blue, MenuOptions.yellow]
     option_thickness = [MenuOptions.thin, MenuOptions.normal, MenuOptions.thick]
 
