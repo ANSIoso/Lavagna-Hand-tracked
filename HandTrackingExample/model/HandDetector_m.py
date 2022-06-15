@@ -161,6 +161,20 @@ class HandDetect:
 
         return True
 
+    def hand_open(self, hand):
+        # method that check if the hand is open
+
+        if not self.exist_hand(hand):
+            return False
+
+        # for each finger check if it is active, if it found a not active one
+        # the hand is not open
+        for finger in self.fingers:
+            if not self.is_finger_active(hand, finger):
+                return False
+
+        return True
+
     def draw_finger_area(self, img, hand, finger):
         # method that draw the "influence area" of a finger
 

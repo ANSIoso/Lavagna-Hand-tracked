@@ -30,6 +30,8 @@ class BoardController(QtCore.QThread):
         # information about the condition of this tread
         self.is_running = False
 
+        self.menu_ready_to_open = False
+
         self.menu_c = menu_c
 
     def run(self):
@@ -53,10 +55,14 @@ class BoardController(QtCore.QThread):
                     self.boardM.finger_on_board(p[0], p[1])
 
             if self.handDetector.exist_hand(1):
+                if self.handDetector.hand_open(1):
+                    self.menu_ready_to_open = True
+
                 # (checked that there is the second hand on the screen):
-                # - if the THUMB and the MIDDLE ^1 are near, open the menù
-                if self.handDetector.is_finger_active(1, self.handDetector.THUMB) and self.handDetector.finger_near(1, self.handDetector.THUMB, self.handDetector.MIDDLE):
+                # - if the hand ^1 is closed and the menù is ready to open, open the menù
+                if self.handDetector.hand_close(1) and self.menu_ready_to_open:
                     self.open_menu()
+                    self.menu_ready_to_open = False
 
                 # - if the THUMB and the PINKY ^1 are near, undo the last line
                 if self.handDetector.finger_near(1, self.handDetector.THUMB, self.handDetector.PINKY):
