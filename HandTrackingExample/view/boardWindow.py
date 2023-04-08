@@ -38,7 +38,7 @@ class Ui_Board(object):
         self.gridLayout.addItem(spacerItem, 1, 2, 1, 1)
         self.boardCanvas = QtWidgets.QLabel(self.central_widget)
         self.boardCanvas.setText("")
-        self.boardCanvas.setPixmap(QtGui.QPixmap("\images.png"))
+        self.boardCanvas.setPixmap(QtGui.QPixmap("../HandTrackingExample/resurces/images.png"))
         self.boardCanvas.setScaledContents(False)
         self.boardCanvas.setObjectName("screen")
         self.gridLayout.addWidget(self.boardCanvas, 1, 1, 1, 1)
@@ -74,7 +74,7 @@ class Ui_Board(object):
         # - take image from the picture capture class
         # - take the canvas
         # - combine it
-        # - show it in the canvas
+        # - schow it in the canvas
 
         cv_img = self.image_io.lastImage
         board_lines = self.board_data.canvas
