@@ -1,6 +1,10 @@
 funzionante con versioni di python 3.8 e 3.9
+https://www.jetbrains.com/help/pycharm/configuring-python-interpreter.html#add_new_project_interpreter
 
 installare:
 - mediapipe
+installazione automatica con pycharm
 - open-cv
+https://www.geeksforgeeks.org/setup-opencv-with-pycharm-environment/
 - myqt5_plugins
+pip install pyqt5-plugins
