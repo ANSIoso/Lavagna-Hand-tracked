@@ -1,0 +1,6 @@
+funzionante con versioni di python 3.8 e 3.9
+
+installare:
+- mediapipe
+- open-cv
+- myqt5_plugins
